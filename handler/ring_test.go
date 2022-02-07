@@ -27,7 +27,7 @@ func BenchmarkRingBufferHandler(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			logging.Info().Logf("buf stdout test")
+			logging.Info().LogAf("buf stdout test: %d, %d, %d", 1, 2, 3)
 		}
 	})
 }

@@ -37,6 +37,7 @@ func TestEventWithNilLogger(t *testing.T) {
 
 	assert.Equal(t, 1, e.GetExtra())
 	assert.Equal(t, "", e.GetMsg())
+	assert.Equal(t, 0, len(e.GetArgs()))
 	assert.Equal(t, "error", e.GetError().Error())
 
 	assert.Equal(t, "v", e.GetTags()["t"])

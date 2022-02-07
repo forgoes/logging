@@ -40,7 +40,7 @@ func newEvent(logger *Logger, level Level) *Event {
 	r.tags = nil
 	r.kvs = nil
 	r.msg = ""
-	r.args = r.args[:0]
+	r.args = nil
 	r.e = nil
 	r.extra = nil
 
@@ -162,6 +162,10 @@ func (e *Event) GetStack() string {
 
 func (e *Event) GetMsg() string {
 	return e.msg
+}
+
+func (e *Event) GetArgs() []interface{} {
+	return e.args
 }
 
 func (e *Event) GetExtra() interface{} {
