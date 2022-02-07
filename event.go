@@ -127,8 +127,8 @@ func (e *Event) Logf(msg string, args ...interface{}) {
 	}
 }
 
-// LogAf support asynchronous fmt.Sprintf in Handler
-func (e *Event) LogAf(msg string, args ...interface{}) {
+// ALogf support asynchronous fmt.Sprintf in Handler
+func (e *Event) ALogf(msg string, args ...interface{}) {
 	if e == nil {
 		return
 	}
