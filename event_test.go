@@ -13,6 +13,8 @@ func TestNilEvent(t *testing.T) {
 	assert.NotPanics(t, func() {
 		e.Tag("t", "v").Attach(nil).Log()
 		e.Kv("k", "v").E(nil).Logf("")
+		e.Kv("k", "v").E(nil).LogAf("%d,%d,%d\n", 1, 2, 3)
+		e.Kv("k", "v").E(nil).LogAf("", 1, 2, 3)
 	})
 }
 
@@ -35,6 +37,7 @@ func TestEventWithNilLogger(t *testing.T) {
 
 	assert.Equal(t, 1, e.GetExtra())
 	assert.Equal(t, "", e.GetMsg())
+	assert.Equal(t, 0, len(e.GetArgs()))
 	assert.Equal(t, "error", e.GetError().Error())
 
 	assert.Equal(t, "v", e.GetTags()["t"])
@@ -57,6 +60,7 @@ func TestEventWithCaller(t *testing.T) {
 	assert.Equal(t, l, e.GetLogger())
 
 	e.Log()
+	e.LogAf("stderr: %d, %d, %d", 1, 2, 3)
 
 	assert.True(t, e.GetCaller().GetOK())
 	assert.True(t, e.GetCaller().GetPC() > 0)
@@ -69,7 +73,7 @@ func TestEventWithGetCallerError(t *testing.T) {
 	l.EnableCaller(INFO)
 	e := newEvent(l, INFO)
 
-	e.log("", 7000000)
+	e.log("", nil, 7000000)
 
 	assert.False(t, e.caller.ok)
 	assert.True(t, e.caller.pc == 0)

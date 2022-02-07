@@ -16,6 +16,7 @@ type Event struct {
 	tags  map[interface{}]interface{}
 	kvs   map[interface{}]interface{}
 	msg   string
+	args  []interface{}
 	e     error
 	extra interface{}
 
@@ -39,6 +40,7 @@ func newEvent(logger *Logger, level Level) *Event {
 	r.tags = nil
 	r.kvs = nil
 	r.msg = ""
+	r.args = nil
 	r.e = nil
 	r.extra = nil
 
@@ -110,7 +112,7 @@ func (e *Event) Log() {
 		return
 	}
 
-	e.log("", 2)
+	e.log("", nil, 2)
 }
 
 func (e *Event) Logf(msg string, args ...interface{}) {
@@ -119,10 +121,19 @@ func (e *Event) Logf(msg string, args ...interface{}) {
 	}
 
 	if len(args) > 0 {
-		e.log(fmt.Sprintf(msg, args...), 2)
+		e.log(fmt.Sprintf(msg, args...), nil, 2)
 	} else {
-		e.log(msg, 2)
+		e.log(msg, nil, 2)
 	}
+}
+
+// LogAf support asynchronous fmt.Sprintf in Handler
+func (e *Event) LogAf(msg string, args ...interface{}) {
+	if e == nil {
+		return
+	}
+
+	e.log(msg, args, 2)
 }
 
 func (e *Event) GetLogger() *Logger {
@@ -153,6 +164,10 @@ func (e *Event) GetMsg() string {
 	return e.msg
 }
 
+func (e *Event) GetArgs() []interface{} {
+	return e.args
+}
+
 func (e *Event) GetExtra() interface{} {
 	return e.extra
 }
@@ -171,6 +186,7 @@ func (e *Event) Clone() *Event {
 	r.tags = e.tags
 	r.kvs = e.kvs
 	r.msg = e.msg
+	r.args = e.args
 	r.e = e.e
 	r.extra = e.extra
 
@@ -185,9 +201,10 @@ func (e *Event) Put() {
 	_eventPool.Put(e)
 }
 
-func (e *Event) log(msg string, skip int) {
+func (e *Event) log(msg string, args []interface{}, skip int) {
 	e.time = time.Now()
 	e.msg = msg
+	e.args = args
 
 	if e.logger.logCaller(e.level) {
 		frame, ok := e.getCallerFrame(skip)

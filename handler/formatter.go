@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"path"
 	"strconv"
 	"strings"
@@ -31,7 +32,13 @@ func JsonFormatter(e *logging.Event) ([]byte, error) {
 		"func": e.GetCaller().GetFunc(),
 		"line": e.GetCaller().GetLine(),
 	}
-	m["msg"] = e.GetMsg()
+	msg := e.GetMsg()
+	args := e.GetArgs()
+	if len(args) > 0 {
+		m["msg"] = fmt.Sprintf(msg, args...)
+	} else {
+		m["msg"] = msg
+	}
 	m["stack"] = e.GetStack()
 	m["extra"] = e.GetExtra()
 
@@ -102,7 +109,13 @@ func StdFormatter(e *logging.Event) ([]byte, error) {
 	buf.WriteString(" ")
 
 	buf.WriteString(Cyan)
-	buf.WriteString(e.GetMsg())
+	msg := e.GetMsg()
+	args := e.GetArgs()
+	if len(args) > 0 {
+		buf.WriteString(fmt.Sprintf(msg, args...))
+	} else {
+		buf.WriteString(msg)
+	}
 	buf.WriteString(Reset)
 
 	if len(e.GetStack()) > 0 {
