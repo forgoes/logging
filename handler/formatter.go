@@ -108,6 +108,14 @@ func StdFormatter(e *logging.Event) ([]byte, error) {
 
 	buf.WriteString(" ")
 
+	err := e.GetError()
+	if err != nil {
+		buf.WriteString(Red)
+		buf.WriteString(err.Error())
+		buf.WriteString(" ")
+		buf.WriteString(Reset)
+	}
+
 	buf.WriteString(Cyan)
 	msg := e.GetMsg()
 	args := e.GetArgs()

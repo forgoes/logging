@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"sync"
 	"testing"
 
@@ -49,7 +50,7 @@ func TestStderrHandlerWithLineFormatter(t *testing.T) {
 	logging.Warn().Log()
 	logging.Warn().Logf("error")
 
-	logging.Error().Logf("error")
+	logging.Error().E(errors.New("with error")).Logf("error")
 
 	logger := logging.GetLogger("handler_test")
 	defer logger.Flush()
