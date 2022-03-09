@@ -1,0 +1,41 @@
+name: test
+
+on:
+  push:
+    branches: ['*']
+    tags: ['v*']
+  pull_request:
+    branches: ['*']
+
+jobs:
+
+  test:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+        go: [ 1.16.x, 1.17.x ]
+        include:
+          - go: 1.17.x
+            latest: true
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Test
+        run: go test -coverprofile=coverage.out -coverpkg=./... ./...
+
+      - name: Upload to codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          files: coverage.out
+          flags: unittests
+          name: codecov-logging
+          verbose: true
