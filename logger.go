@@ -276,8 +276,6 @@ func (l *Logger) log(level Level, done func(interface{})) *Event {
 }
 
 func (l *Logger) handle(event *Event) {
-	defer event.Put()
-
 	if event.level < l.level {
 		return
 	}

@@ -16,7 +16,8 @@ func (s *StdoutWriter) Flush() error {
 }
 
 func (s *StdoutWriter) Close() error {
-	return os.Stdout.Close()
+	// Do not close process-wide stdout.
+	return nil
 }
 
 func (s *StdoutWriter) WriteString(b string) (n int, err error) {
@@ -39,7 +40,8 @@ func (s *StderrWriter) Flush() error {
 }
 
 func (s *StderrWriter) Close() error {
-	return os.Stderr.Close()
+	// Do not close process-wide stderr.
+	return nil
 }
 
 func (s *StderrWriter) WriteString(b string) (n int, err error) {

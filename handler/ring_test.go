@@ -11,6 +11,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestRingBufferHandlerWithInvalidSizeDoesNotPanic(t *testing.T) {
+	defer logging.Flush()
+	defer logging.Close()
+
+	w, err := writer.NewBufWriter(0, writer.NewStdoutWriter())
+	assert.Nil(t, err)
+
+	assert.NotPanics(t, func() {
+		rh := NewRingBufferHandler(w, StdFormatter, 0, diode.AlertFunc(func(int) {}), 0)
+		logging.AddHandler(rh)
+		defer logging.RemoveHandler(rh)
+		logging.Info().Logf("size guard test")
+		_ = rh.Flush()
+		_ = rh.Close()
+	})
+}
+
 func BenchmarkRingBufferHandler(b *testing.B) {
 	defer logging.Flush()
 	defer logging.Close()

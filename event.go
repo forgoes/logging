@@ -228,6 +228,7 @@ func (e *Event) log(msg string, args []interface{}, skip int) {
 	}
 
 	e.logger.handle(e)
+	e.Put()
 
 	e.logger.couldEnd(e.level, e.msg)
 }

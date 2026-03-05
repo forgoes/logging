@@ -48,6 +48,10 @@ func (b *BufWriter) Flush() error {
 }
 
 func (b *BufWriter) Close() error {
+	if err := b.Flush(); err != nil {
+		return err
+	}
+
 	if err := b.w.Close(); err != nil {
 		return err
 	}

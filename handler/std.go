@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"os"
 	"sync"
 
 	"github.com/forgoes/logging"
@@ -45,14 +44,15 @@ func (s *StderrHandler) Flush() error {
 	s.Lock()
 	defer s.Unlock()
 
-	return os.Stderr.Sync()
+	return s.w.Flush()
 }
 
 func (s *StderrHandler) Close() error {
 	s.Lock()
 	defer s.Unlock()
 
-	return os.Stderr.Close()
+	// Do not close process-wide stderr.
+	return s.w.Flush()
 }
 
 type BufStderrHandler struct {
@@ -144,14 +144,15 @@ func (s *StdoutHandler) Flush() error {
 	s.Lock()
 	defer s.Unlock()
 
-	return os.Stdout.Sync()
+	return s.w.Flush()
 }
 
 func (s *StdoutHandler) Close() error {
 	s.Lock()
 	defer s.Unlock()
 
-	return os.Stdout.Close()
+	// Do not close process-wide stdout.
+	return s.w.Flush()
 }
 
 type BufStdoutHandler struct {
