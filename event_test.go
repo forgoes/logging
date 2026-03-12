@@ -91,7 +91,7 @@ func TestEventWithStack(t *testing.T) {
 	e.Log()
 
 	assert.True(t, e.GetStack() != "")
-	assert.True(t, e.GetTime().Second() > 0)
+	assert.False(t, e.GetTime().IsZero())
 }
 
 func deepStack(n int, e *Event) {

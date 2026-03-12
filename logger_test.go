@@ -129,7 +129,7 @@ func TestLogger_NopErrorHandler(t *testing.T) {
 	h.On("Handle", mock.MatchedBy(func(e *Event) bool {
 		return e.GetLogger() == l && e.level == INFO && e.msg == "1" &&
 			e.caller.pc == 0 && e.caller.file == "" && e.caller.line == 0 && e.caller.ok == false &&
-			e.time.Second() > 0
+			!e.time.IsZero()
 	})).Once().Return(true, errors.New("ph handle error"))
 	h.On("Flush").Return(errors.New("h flush error"))
 	h.On("Close").Return(nil)
@@ -152,6 +152,81 @@ func TestLogger_SetErrorHandler(t *testing.T) {
 	l.SetErrorHandler(h)
 
 	assert.Equal(t, h, l.errorHandler)
+}
+
+func TestLogger_Clone(t *testing.T) {
+	h := &MockHandler{}
+	eh := &MockErrorHandler{}
+	parent := newLogger()
+
+	l := newLogger()
+	l.manager = &manager{}
+	l.parent = parent
+	l.placeholder = true
+	l.name = "svc.api"
+	l.SetPropagate(true)
+	l.SetLevel(ERROR)
+	l.AddHandler(h)
+	l.SetErrorHandler(eh)
+	l.EnableCaller(ERROR)
+	l.EnableStack(PANIC)
+	l.SetTag("service", "billing")
+	l.SetKv("region", "ca-central-1")
+
+	cloned := l.Clone()
+
+	assert.NotNil(t, cloned)
+	assert.NotSame(t, l, cloned)
+	assert.Equal(t, l.manager, cloned.manager)
+	assert.Equal(t, l.parent, cloned.parent)
+	assert.Equal(t, l.placeholder, cloned.placeholder)
+	assert.Equal(t, l.name, cloned.name)
+	assert.Equal(t, l.GetPropagate(), cloned.GetPropagate())
+	assert.Equal(t, l.GetLevel(), cloned.GetLevel())
+	assert.Equal(t, l.errorHandler, cloned.errorHandler)
+	assert.Equal(t, l.handlers, cloned.handlers)
+	assert.Equal(t, l.caller, cloned.caller)
+	assert.Equal(t, l.stack, cloned.stack)
+	assert.Equal(t, l.Tags(), cloned.Tags())
+	assert.Equal(t, l.Kvs(), cloned.Kvs())
+	assert.Empty(t, cloned.children)
+
+	cloned.SetTag("request_id", "req-1")
+	cloned.SetKv("user_id", 42)
+	cloned.EnableCaller(INFO)
+	cloned.EnableStack(ERROR)
+	cloned.AddHandler(NewNopHandler())
+
+	assert.Nil(t, l.Tags()["request_id"])
+	assert.Nil(t, l.Kvs()["user_id"])
+	assert.False(t, l.logCaller(INFO))
+	assert.False(t, l.logStack(ERROR))
+	assert.Len(t, l.handlers, 1)
+	assert.Len(t, cloned.handlers, 2)
+}
+
+func TestLogger_LogSnapshotsTagsAndKvs(t *testing.T) {
+	l := newLogger()
+	l.SetTag("request_id", "req-1")
+	l.SetKv("user_id", 42)
+
+	event := l.Info()
+	assert.Equal(t, "req-1", event.GetTags()["request_id"])
+	assert.Equal(t, 42, event.GetKvs()["user_id"])
+
+	l.SetTag("request_id", "req-2")
+	l.SetKv("user_id", 99)
+
+	assert.Equal(t, "req-1", event.GetTags()["request_id"])
+	assert.Equal(t, 42, event.GetKvs()["user_id"])
+
+	event.Tag("request_id", "event")
+	event.Kv("user_id", 100)
+
+	assert.Equal(t, "event", event.GetTags()["request_id"])
+	assert.Equal(t, 100, event.GetKvs()["user_id"])
+	assert.Equal(t, "req-2", l.Tags()["request_id"])
+	assert.Equal(t, 99, l.Kvs()["user_id"])
 }
 
 func TestLogger_Tag(t *testing.T) {

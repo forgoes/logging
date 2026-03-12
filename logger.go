@@ -68,8 +68,46 @@ func newLogger() *Logger {
 	}
 }
 
+func cloneInterfaceMap(src map[interface{}]interface{}) map[interface{}]interface{} {
+	dst := make(map[interface{}]interface{}, len(src))
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}
+
+func cloneLevelMap(src map[Level]bool) map[Level]bool {
+	dst := make(map[Level]bool, len(src))
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}
+
 func (l *Logger) Name() string {
 	return l.name
+}
+
+func (l *Logger) Clone() *Logger {
+	if l == nil {
+		return nil
+	}
+
+	return &Logger{
+		manager:      l.manager,
+		parent:       l.parent,
+		placeholder:  l.placeholder,
+		children:     make(map[*Logger]struct{}),
+		name:         l.name,
+		propagate:    l.propagate,
+		level:        l.level,
+		handlers:     append([]Handler(nil), l.handlers...),
+		errorHandler: l.errorHandler,
+		caller:       cloneLevelMap(l.caller),
+		stack:        cloneLevelMap(l.stack),
+		tags:         cloneInterfaceMap(l.tags),
+		kvs:          cloneInterfaceMap(l.kvs),
+	}
 }
 
 func (l *Logger) SetPropagate(propagate bool) {
@@ -261,6 +299,8 @@ func (l *Logger) couldEnd(level Level, v interface{}) {
 		l.Flush()
 		l.Close()
 		exit(1)
+	default:
+		return
 	}
 }
 
@@ -272,7 +312,15 @@ func (l *Logger) log(level Level, done func(interface{})) *Event {
 		return nil
 	}
 
-	return newEvent(l, level)
+	event := newEvent(l, level)
+	if len(l.tags) > 0 {
+		event.tags = cloneInterfaceMap(l.tags)
+	}
+	if len(l.kvs) > 0 {
+		event.kvs = cloneInterfaceMap(l.kvs)
+	}
+
+	return event
 }
 
 func (l *Logger) handle(event *Event) {
